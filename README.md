@@ -43,7 +43,7 @@ Before you begin, ensure you have:
 
 | Requirement | Minimum Version | Download |
 |-------------|-----------------|----------|
-| **Blender** | 3.6.0+ | [blender.org](https://www.blender.org/download/) |
+| **Blender** | 4+ | [blender.org](https://www.blender.org/download/) |
 | **n8n** | Latest | [n8n.io](https://n8n.io/) |
 | **Python** | 3.10+ | Included with Blender |
 | **OpenAI API Key** | - | [platform.openai.com](https://platform.openai.com/) |
