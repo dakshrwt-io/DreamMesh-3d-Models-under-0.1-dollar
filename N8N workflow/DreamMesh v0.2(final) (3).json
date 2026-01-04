@@ -1,0 +1,1369 @@
+{
+  "name": "DreamMesh v0.2(final)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "process",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4064,
+        992
+      ],
+      "id": "61922f1e-2674-4390-aa6d-093b3ffb42c4",
+      "name": "Webhook - Start",
+      "webhookId": "dreammesh-webhook-v2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-update-mode",
+              "leftValue": "={{ $json.body.update }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3680,
+        992
+      ],
+      "id": "441e2ae8-8bd7-41a8-ba7a-d64ee6401298",
+      "name": "Update or Create?"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"model_name\": \"descriptive_name\",\n  \"objects\": [\n    {\n      \"name\": \"temple_base\",\n      \"location\": [0, 0, 0],\n      \"scale\": [12, 20, 1],\n      \"rotation\": [0, 0, 0],\n      \"purpose\": \"foundation\",\n      \"enhanced_parameters\": {\n        \"subdivision_level\": 2,\n        \"color\": [1.0, 0.8, 0.6, 1.0],\n        \"shape_type\": \"cube\",\n        \"modifier_stack\": [\"Subdivision\", \"Bevel\"]\n      }\n    }\n  ]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -3152,
+        1632
+      ],
+      "id": "8576807e-2005-45d1-9782-1710f53638cb",
+      "name": "Layout Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        -3328,
+        1456
+      ],
+      "id": "b93bbf0a-e6fc-471f-a413-f7e10f812def",
+      "name": "Layout Auto-fix"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-5-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -3328,
+        1632
+      ],
+      "id": "f268c945-58ef-4703-a4e2-c5c1ec7c8cbf",
+      "name": "Auto-fix LLM",
+      "credentials": {
+        "openRouterApi": {
+          "id": "7Ei3PY8PNtRLFQsj",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-objects-empty",
+              "leftValue": "={{ $json.output.objects }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2896,
+        1120
+      ],
+      "id": "960b1754-5636-41c9-9240-17620a7057c4",
+      "name": "Objects Generated?"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.objects",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2656,
+        1232
+      ],
+      "id": "f9513205-2974-4dd2-be2c-cba2375fb7f0",
+      "name": "Split Objects"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -2464,
+        1232
+      ],
+      "id": "47a078b3-2f71-49b4-8729-5626a0f528b9",
+      "name": "Loop Objects"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"code\": \"import bpy\\nimport bmesh\\n\\n# Your generated code here\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -2128,
+        1472
+      ],
+      "id": "b91f9f3f-a02a-4af0-abb1-1bb92bbf015b",
+      "name": "Code Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-code",
+              "name": "code",
+              "value": "={{ $json.output.code }}",
+              "type": "string"
+            },
+            {
+              "id": "set-retry",
+              "name": "retry_count",
+              "value": "=0",
+              "type": "number"
+            },
+            {
+              "id": "set-object-name",
+              "name": "object_name",
+              "value": "={{ $('Loop Objects').item.json['output.objects'].name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1984,
+        1248
+      ],
+      "id": "2eb73f4e-c9e3-4586-9cf1-ca27a57fa60a",
+      "name": "Prepare Code"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"output\": \"import bpy\\nimport bmesh\\n\\n# Corrected code\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1632,
+        1472
+      ],
+      "id": "c50e85bd-3ad0-43aa-b3c2-6d8834d947dc",
+      "name": "Syntax Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "code",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 130000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1360,
+        1232
+      ],
+      "id": "50259cde-07e4-4806-a2d4-435265c96a1f",
+      "name": "Send to Blender",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-code-executed",
+              "leftValue": "={{ $json.code_executed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -816,
+        1168
+      ],
+      "id": "25546d92-156d-4da6-80bc-2ff74f0aea7b",
+      "name": "Code Executed OK?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-retry-limit",
+              "leftValue": "={{ $('Prepare Code').item.json.retry_count }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lt",
+                "name": "filter.operator.lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -816,
+        960
+      ],
+      "id": "be7ef437-d824-4dd9-bd1f-a10cf1839354",
+      "name": "Retry Limit?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "inc-retry",
+              "name": "retry_count",
+              "value": "={{ $('Prepare Code').item.json.retry_count + 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "error-category",
+              "name": "error_category",
+              "value": "={{ $('Send to Blender').item.json.error_category }}",
+              "type": "string"
+            },
+            {
+              "id": "error-message",
+              "name": "error_message",
+              "value": "={{ $('Send to Blender').item.json.error_message }}",
+              "type": "string"
+            },
+            {
+              "id": "error-type",
+              "name": "error_type",
+              "value": "={{ $('Send to Blender').item.json.error_type }}",
+              "type": "string"
+            },
+            {
+              "id": "fix-suggestions",
+              "name": "fix_suggestions",
+              "value": "={{ $('Send to Blender').item.json.fix_suggestions }}",
+              "type": "array"
+            },
+            {
+              "id": "error-line",
+              "name": "error_line",
+              "value": "={{ $('Send to Blender').item.json.error_line }}",
+              "type": "number"
+            },
+            {
+              "id": "original-code",
+              "name": "original_code",
+              "value": "={{ $('Send to Blender').item.json.original_code }}",
+              "type": "string"
+            },
+            {
+              "id": "problematic-section",
+              "name": "problematic_code_section",
+              "value": "={{ $('Send to Blender').item.json.problematic_code_section }}",
+              "type": "string"
+            },
+            {
+              "id": "object-name",
+              "name": "object_name",
+              "value": "={{ $('Prepare Code').item.json.object_name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -608,
+        544
+      ],
+      "id": "0f551ce3-5b64-43ac-9a2c-b359a57050c3",
+      "name": "Prepare Error Data"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"code\": \"import bpy\\nimport bmesh\\n\\n# Fixed code here\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        752
+      ],
+      "id": "44b5bb15-c774-43ed-a046-f6c956d45a79",
+      "name": "Fixer Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "code",
+              "value": "={{ $json.output.code }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 130000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        544
+      ],
+      "id": "930e61f8-f3d4-464b-b355-b64cc2e6d4f0",
+      "name": "Retry Send to Blender",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-retry-success",
+              "leftValue": "={{ $json.code_executed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        80
+      ],
+      "id": "d96c9b58-f748-4a5e-bea0-53905acf4e4c",
+      "name": "Retry Success?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "success-status",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "success-message",
+              "name": "message",
+              "value": "=Object '{{ $('Prepare Code').item.json.object_name }}' created successfully",
+              "type": "string"
+            },
+            {
+              "id": "new-objects",
+              "name": "new_objects",
+              "value": "={{ $json.new_objects }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        1072
+      ],
+      "id": "bab543c7-46d1-4504-8161-15f0eeec8655",
+      "name": "Mark Success"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "retry-success-status",
+              "name": "status",
+              "value": "success_after_retry",
+              "type": "string"
+            },
+            {
+              "id": "retry-success-message",
+              "name": "message",
+              "value": "=Object '{{ $('Prepare Code').item.json.object_name }}",
+              "type": "string"
+            },
+            {
+              "id": "retry-new-objects",
+              "name": "new_objects",
+              "value": "={{ $json.new_objects }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        896
+      ],
+      "id": "671defae-b19b-4e35-824f-c072b821f917",
+      "name": "Mark Retry Success"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fail-status",
+              "name": "status",
+              "value": "failed",
+              "type": "string"
+            },
+            {
+              "id": "fail-message",
+              "name": "message",
+              "value": "=Failed to create object '{{ $('Prepare Code').item.json.object_name }}' after 3 retry attempts",
+              "type": "string"
+            },
+            {
+              "id": "last-error",
+              "name": "last_error",
+              "value": "={{ $('Send to Blender').item.json.error_message || $json.error_message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -608,
+        816
+      ],
+      "id": "81e07bd3-3289-4db8-8a25-ef69f0f9d6e1",
+      "name": "Mark Failed"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        624,
+        1232
+      ],
+      "id": "1fb193d8-16c5-42c7-95ab-03bf3d9ddd40",
+      "name": "Merge Results"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.current_scene.objects }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# Blender Scene Manipulation Agent\\n\\n**TASK**: {{ $json.body.prompt }}\\n\\n## Core Function\\nAnalyze current Blender scene → Write precise bpy code → Execute user requests\\n\\n## Key Patterns\\n- **Object check**: `obj = bpy.data.objects.get(\"Name\"); if obj:`\\n- **Safe delete**: `bpy.data.objects.remove(obj, do_unlink=True)`\\n- **Material assign**: `obj.data.materials.append(mat)`\\n\\n## Output\\nReturn only executable Python code with error handling."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -3360,
+        112
+      ],
+      "id": "aeb76e5c-6cf2-4a38-9b11-9cd695e67dfa",
+      "name": "Scene Update Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"code\": \"import bpy\\nprint(\\\"Hello\\\")\\n\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -2928,
+        544
+      ],
+      "id": "4b9aa575-ef57-4c90-97bb-2d6418813010",
+      "name": "Update Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "typeVersion": 1,
+      "position": [
+        -3008,
+        384
+      ],
+      "id": "29630ede-b444-4024-9943-c89b54505f39",
+      "name": "Update Auto-fix"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-5-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -3072,
+        560
+      ],
+      "id": "c6305e81-2055-4268-bcec-12da962a898a",
+      "name": "Update Auto-fix LLM",
+      "credentials": {
+        "openRouterApi": {
+          "id": "7Ei3PY8PNtRLFQsj",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "code",
+              "value": "={{ $json.output.code }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 130000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2976,
+        112
+      ],
+      "id": "5ecf3836-991a-4b66-a166-6c51da8e8d92",
+      "name": "Update Send to Blender"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Error fallback - creates 3D \"ERROR!!\" text in Blender\nblender_code = '''\nimport bpy\n\n# Create 3D Text\nbpy.ops.object.text_add(location=(0, 0, 0))\ntext_obj = bpy.context.object\ntext_obj.data.body = \"ERROR - Layout Failed\"\ntext_obj.name = \"ErrorText\"\ntext_obj.data.extrude = 0.1\ntext_obj.data.bevel_depth = 0.02\ntext_obj.rotation_euler[0] = 1.5708\n'''\n\nreturn [{\n    \"json\": {\n        \"output\": {\n            \"code\": blender_code.strip()\n        },\n        \"status\": \"fallback\",\n        \"message\": \"Layout generation failed, showing error text\"\n    }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2896,
+        896
+      ],
+      "id": "3d11c857-fe15-4e3a-86f2-d9794eba3a73",
+      "name": "Error Fallback Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "code",
+              "value": "={{ $json.output.code }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 130000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2672,
+        896
+      ],
+      "id": "75b690ae-b6d8-4bbe-9a5f-b9bcf3af8ef1",
+      "name": "Fallback Send to Blender"
+    },
+    {
+      "parameters": {
+        "content": "## 🎯 DreamMesh v2 - With Error Retry\n\n### Flow Overview:\n1. **Webhook** receives prompt\n2. **Layout Planner** creates object list\n3. **Loop** processes each object\n4. **Code Generator** creates Blender Python\n5. **Syntax Corrector** validates code\n6. **Send to Blender** executes code\n7. **Check Execution** validates `code_executed` field\n8. **Error Fixer** retries up to 3 times on failure\n\n### Key Features:\n- ✅ Synchronous execution (waits for result)\n- ✅ `code_executed: true/false` checking\n- ✅ Automatic error retry with fix suggestions\n- ✅ Up to 3 retry attempts per object\n- ✅ Detailed error info for LLM fixing",
+        "height": 512,
+        "width": 360,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3936,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "c4ecb83b-4048-4fab-b278-b73a46aac000",
+      "name": "Info"
+    },
+    {
+      "parameters": {
+        "content": "## 🔄 ERROR RETRY LOOP\n\nWhen `code_executed: false`:\n1. Check retry count < 3\n2. Extract error details\n3. Send to Error Fixer Agent\n4. Retry execution\n5. Repeat until success or max retries",
+        "height": 224,
+        "width": 336,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        256,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "a514f0f5-0424-4ca5-a1ae-4ab6d9bb364a",
+      "name": "Retry Info"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini-2025-08-07",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini-2025-08-07"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -3504,
+        1440
+      ],
+      "id": "f746e473-caa1-444b-bc0b-3a0f991f9327",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "6qXoQ9RmYBsoBudQ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.prompt }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "# Advanced 3D Model Layout Generation Agent\n\nYou are an **Elite 3D Architecture AI** specializing in converting conceptual prompts into sophisticated, production-ready 3D object layouts. Your expertise spans from organic modeling to hard-surface design, with deep understanding of modern procedural workflows and architectural principles.\n\n---\n\n## 🎯 CORE MISSION\nTransform high-level creative prompts into **hierarchical, procedurally-optimized 3D layouts** that leverage Blender's most advanced capabilities including Geometry Nodes, advanced modifiers, and realistic material systems.\n\n---\n\n## 🚫 CRITICAL OBJECT CONSOLIDATION RULES\n\n### AVOID REDUNDANT OBJECTS - Think Like a Professional 3D Artist:\n\n**❌ WRONG - Redundant Approach:**\n```json\n\"objects\": [\n  \"foundation\", \"right_wall\", \"left_wall\", \"front_wall\", \"back_wall\", \"roof\"\n]\n```\n\n**✅ CORRECT - Consolidated Approach:**\n```json\n\"objects\": [\n  \"foundation\", \"wall_structure\", \"roof_system\"\n]\n```\n\n### Smart Consolidation Guidelines:\n\n#### **Architectural Elements:**\n- **Walls** → Single \"wall_structure\" or \"exterior_shell\" \n- **Windows** → \"window_array\" or \"fenestration_system\"\n- **Doors** → Part of wall_structure with boolean cuts\n- **Roofing** → \"roof_system\" (includes rafters, shingles, gutters)\n- **Flooring** → \"floor_system\" (includes subfloor, finish, trim)\n\n#### **Mechanical Assemblies:**\n- **Robot Arms** → \"upper_arm\", \"forearm\", \"hand_assembly\" (not finger1, finger2, finger3...)\n- **Vehicles** → \"chassis\", \"drive_system\", \"body_panels\", \"interior_assembly\"\n- **Furniture** → \"frame_structure\", \"upholstery_system\", \"hardware_assembly\"\n\n#### **Organic Systems:**\n- **Trees** → \"trunk_system\", \"branch_network\", \"foliage_canopy\"\n- **Characters** → \"torso\", \"limb_assembly\", \"head_features\"\n- **Landscapes** → \"terrain_base\", \"vegetation_layer\", \"water_features\"\n\n\n## 🏗️ ENHANCED OUTPUT SCHEMA\n\n```json\n{\n  \"model_name\": \"descriptive_name\",\n  \"objects\": [\n    \"(name, [x, y, z], [sx, sy, sz], [rx, ry, rz], 'purpose', {enhanced_parameters})\"\n  ],\n}\n```\n\n---\n\n## 🧩 INTELLIGENT OBJECT GROUPING STRATEGIES\n\n### 1. **Functional Consolidation**\nGroup objects that serve the same functional purpose:\n- All structural elements → \"structural_system\"\n- All decorative elements → \"detail_assembly\"\n- All mechanical parts → \"mechanism_core\"\n\n### 2. **Material-Based Grouping**\nCombine objects sharing the same material properties:\n- All wood components → \"wooden_framework\"\n- All metal parts → \"metal_hardware\"\n- All glass elements → \"glazing_system\"\n\n### 3. **Construction Logic Grouping**\nFollow real-world construction/manufacturing sequences:\n- Foundation → Structure → Envelope → Interior → Details\n- Frame → Engine → Body → Accessories\n- Base → Mechanism → Housing → Controls\n\n### 4. **Procedural System Grouping**\nObjects that can be generated procedurally together:\n- Array-based elements → Single object with array modifier\n- Instanced components → Single object with geometry nodes\n- Symmetric parts → Single object with mirror modifier\n\n---\n\n## 🔧 ENHANCED TUPLE PARAMETERS\n\n### Core Format (Unchanged)\n`(name, [x, y, z], [sx, sy, sz], [rx, ry, rz], 'purpose', {enhanced_parameters})`\n\n### Extended Optional Parameters\n```json\n{\n  \"color\": [r, g, b, a],\n  \"shape_type\": \"primitive_type\",\n  \"parent\": \"parent_object_name\",\n  \"mirror_axis\": \"x|y|z|xy|xz|yz|xyz\",\n  \"tags\": [\"functional\", \"aesthetic\", \"structural\"],\n  \n  // CONSOLIDATION PARAMETERS\n  \"consolidation_strategy\": \"array|boolean|geometry_nodes|modifier_stack\",\n  \"internal_complexity\": \"simple|moderate|complex|ultra_detailed\",\n  \"sub_components\": [\"component1\", \"component2\"], // Conceptual only - not separate objects\n  \n  // ADVANCED PARAMETERS\n  \"subdivision_level\": 0-4,\n  \"geometry_node_group\": \"procedural_system_name\",\n  \"modifier_stack\": [\"modifier_type_1\"],\n  \"material_complexity\": \"simple|pbr|procedural|shader_graph\",\n  \"instancing\": {\n    \"type\": \"array|scatter|particle\",\n    \"count\": 10,\n    \"pattern\": \"linear|radial|random|curve_follow\"\n  },\n  \"deformation\": {\n    \"type\": \"wave|noise|lattice|armature\",\n    \"strength\": 0.1-2.0,\n    \"frequency\": 1.0-10.0\n  },\n  \"physics\": {\n    \"type\": \"rigid|soft|cloth|fluid\",\n    \"mass\": 1.0,\n    \"friction\": 0.5\n  },\n  \"detail_level\": \"proxy|medium|high|ultra\",\n  \"animation_ready\": true,\n  \"optimization\": {\n    \"lod_levels\": 3,\n    \"decimation_ratio\": 0.25,\n    \"texture_resolution\": 1024\n  }\n}\n```\n\n---\n\n## 📦 ADVANCED AGENT USE CATEGORIES\n\n### Core Systems\n- **`bmesh`** - Advanced mesh operations, topology control, custom geometry\n- **`modifiers`** - Complex modifier stacks, non-destructive workflows  \n- **`geometry_nodes`** - Parametric systems, instancing, procedural details\n- **`mathutils`** - Precise transformations, curve mathematics, spatial relationships\n\n---\n\n## 🎨 DESIGN INTELLIGENCE PRINCIPLES\n\n### 1. **Hierarchical Thinking**\n- Break complex objects into logical sub-assemblies\n- Use proper parent-child relationships\n- Consider real-world construction methods\n- **CONSOLIDATE whenever possible - fewer, smarter objects**\n\n### 2. **Real-World Physics**\n- Apply realistic proportions and scale\n- Consider structural integrity\n- Account for material properties\n\n### 3. **Production Efficiency**\n- Minimize object count while maximizing detail\n- Use procedural systems for repetitive elements\n- Design for easy modification and variation\n\n---\n\n## 🚀 ADVANCED GENERATION STRATEGIES\n\n### For Organic Objects:\n```json\n{\n  \"agentUse\": [\"bmesh\", \"geometry_nodes\", \"shader\", \"physics\"],\n  \"consolidation_approach\": \"unified_organism\",\n  \"procedural_systems\": {\n    \"geometry_nodes_groups\": [\"organic_growth\", \"surface_displacement\"],\n    \"material_systems\": [\"subsurface_scattering\"\"]\n  }\n}\n```\n\n### For Mechanical Assemblies:\n```json\n{\n  \"agentUse\": [\"bmesh\", \"modifiers\", \"mathutils\", \"physics\"],\n  \"consolidation_approach\": \"functional_assemblies\",\n  \"procedural_systems\": {\n    \"modifier_chains\": [\"boolean_cutting\", \"bevel_pipeline\"],\n    \"material_systems\": [\"metallic_pbr\"]\n  }\n}\n```\n\n### For Architectural Structures:\n```json\n{\n  \"agentUse\": [\"geometry_nodes\", \"modifiers\", \"shader\", \"optimization\"],\n  \"consolidation_approach\": \"building_systems\",\n  \"procedural_systems\": {\n    \"geometry_nodes_groups\": [\"window_arrays\", \"structural_beams\"],\n    \"material_systems\": [\"architectural_materials\"]\n  }\n}\n```\n\n---\n\n## 📐 SPATIAL INTELLIGENCE GUIDELINES\n\n### Proportional Relationships (STRICTLY)\n- Use golden ratio (1.618) for aesthetic proportions\n- Apply real-world scale references (human scale = 1.8m height)\n- Maintain consistent unit systems throughout\n\n### Positioning Logic\n- Use grid-based positioning for mechanical objects\n- Apply organic flow principles for natural forms\n- Consider visual weight and balance\n\n### Rotation Strategies\n- Use 15°, 30°, 45°, 90° increments for mechanical precision\n- Apply Fibonacci spirals (137.5°) for organic arrangements\n- Consider viewing angles and composition\n\n---\n\n## 🎭 STYLE-SPECIFIC ADAPTATIONS\n\n### Sci-Fi/Futuristic\n```json\n\"style_parameters\": {\n  \"consolidation_style\": \"modular_systems\",\n  \"edge_flow\": \"hard_surface\",\n  \"detail_density\": \"high_tech\",\n  \"color_palette\": \"cool_metals\",\n  \"lighting_integration\": \"embedded_leds\"\n}\n```\n\n### Organic/Natural\n```json\n\"style_parameters\": {\n  \"consolidation_style\": \"unified_growth\",\n  \"edge_flow\": \"organic_curves\",\n  \"detail_density\": \"fractal_complexity\", \n  \"color_palette\": \"earth_tones\",\n  \"surface_variation\": \"natural_imperfections\"\n}\n```\n\n### Architectural/Industrial\n```json\n\"style_parameters\": {\n  \"consolidation_style\": \"building_systems\",\n  \"edge_flow\": \"structural_logic\",\n  \"detail_density\": \"functional_minimalism\",\n  \"color_palette\": \"material_honest\",\n  \"construction_method\": \"modular_assembly\"\n}\n```\n\n---\n\n## 🧪 PROCEDURAL ENHANCEMENT STRATEGIES\n\n### Geometry Nodes Integration\n- Plan for parametric control systems\n- Design for easy variation generation\n- Include socket exposure for external control\n- **Use for creating multiple similar elements as one object**\n\n### Advanced Modifier Workflows\n- Stack modifiers in logical order\n- Use modifier masks for selective application\n- Plan for animation-friendly setups\n- **Array and mirror modifiers prevent object duplication**\n\n### Material System Planning\n- Group objects by material families\n- Plan UV layouts for efficient texturing\n- Design for shader graph complexity\n\n---\n\n## 💡 INNOVATION REQUIREMENTS\n\n### Always Include:\n1. **Intelligent object consolidation** - No redundant separate objects\n2. **At least one procedural system** (Geometry Nodes or advanced modifier)  \n3. **Hierarchical organization** with logical parent-child relationships\n\n### Push Boundaries By:\n- Using cutting-edge Blender features\n- Combining multiple procedural systems\n- Creating emergent complexity from simple rules\n- Planning for real-time interaction capabilities\n- **Maximizing detail while minimizing object count**\n\n---\n\n## 🎯 OUTPUT REQUIREMENTS\n\n- **STRICTLY maintain real world distance and scale**\n- **ENSURE** mathematical precision in all coordinates\n- **CONSOLIDATE** - Think \"How would a professional 3D artist structure this?\"\n- **AVOID** creating separate objects for elements that can be unified\n- **MAXIMIZE** the use of modifiers, arrays, and procedural systems\n\n---\n\n## 🔍 CONSOLIDATION CHECKLIST\n\nBefore finalizing object list, ask:\n1. Can these be combined into a single object with modifiers?\n2. Are these repetitive elements that could use an array?\n3. Do these serve the same functional purpose?\n4. Would a professional 3D artist model these separately or together?\n5. Can geometry nodes generate this variation procedurally?\n\n**Target: 3-8 main objects for most complex scenes, not 15-30 separate pieces**\n\n---\n\n## 📊 QUALITY METRICS\n\nYour layouts will be evaluated on:\n- **Realism**: Are proportions and relationships believable?\n- **Efficiency**: Minimal object count with maximum detail\n- **Professional Structure**: Industry-standard organization\n- **Procedural Intelligence**: Smart use of Blender's advanced features\n\nGenerate layouts that would impress professional 3D artists and technical directors in major studios while maintaining clean, efficient hierarchies."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -3376,
+        1088
+      ],
+      "id": "627b8151-7be7-4f1f-830a-10ac3a1c48a2",
+      "name": "Layout Generator"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json[\"output.objects\"] }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "User prompt - {{ $json.output.model_name }} \npurpose - {{ $json['output.objects'].purpose }}\nobject name,location,scale,rotation - {{ $json['output.objects'].name }},{{ $json['output.objects'].location }},{{ $json['output.objects'].scale }},{{ $json['output.objects'].rotation }}\n\nadvanced parameter - subdivision_level({{ $json['output.objects'].enhanced_parameters.subdivision_level }}), color({{ $json['output.objects'].enhanced_parameters.color }}),shape_type({{ $json['output.objects'].enhanced_parameters.shape_type }}),modifier_stack({{ $json['output.objects'].enhanced_parameters.modifier_stack }})\n\nAdvanced Blender Python Generator\\n\\nYou are a **Master Blender Technical Artist AI** that creates sophisticated 3D geometry using advanced procedural methods.\\n\\nMain Task - ' + $('Webhook - Start').item.json.body.prompt + '\\ncurrent Task - ' + $json['output.objects'].name + '\\nThings to focus on - purpose - ' + $json['output.objects'].purpose : '# Advanced Blender Python Generator\\n\\n## 🚫 CRITICAL RESTRICTIONS\\n- **NEVER** use `bpy.ops.mesh.primitive_*` operations\\n- **NO** basic primitive operators\\n- **NO** comments or markdown in output\\n- **NO** `if __name__ == \"__main__\":` blocks\\n\\n## 🎯 REQUIRED APPROACH\\n- Use bmesh for mesh construction\\n- Generate geometry through mathematical calculations\\n- Use parametric surface creation\\n- Apply procedural techniques\\n\\n## 📋 OUTPUT SPECIFICATIONS\\n- Start directly with `import bpy`\\n- Include all required imports at top\\n- Always use radius instead of diameter\\n- Define all functions before using them\\n- Never delete existing scene objects\\n- Include proper memory management with bm.free()\\n- Return executable Python code only"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -2272,
+        1248
+      ],
+      "id": "f0d409df-e16c-4f4d-b3b4-f6ae84016986",
+      "name": "Code Generator"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.code }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "# Blender Python Syntax Corrector - Blender 4.4 API\\n\\nYour task is to review and fix Blender Python scripts for syntax errors, outdated API calls, and Blender 4.4 compatibility issues.\\n\\n## Correction Rules\\n\\n1. **Syntax Errors**: Fix indentation, missing colons, unmatched brackets\\n2. **API Updates**: Use Blender 4.4 API (node_group.interface.new_socket() etc.)\\n3. **Safety**: Wrap node input assignments in try/except\\n4. **Mesh Updates**: Use mesh.update() after modifications\\n\\n## DO NOT:\\n- Optimize or restructure code\\n- Change variable names or logic\\n- Add explanations\\n\\n## OUTPUT:\\n- Return ONLY the corrected Python script\\n- No markdown, no explanations"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1776,
+        1232
+      ],
+      "id": "bdd25cd4-91d5-4a78-99ff-ed303cc30c4e",
+      "name": "Syntex checker"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=## ERROR FIXING REQUEST\n\n**Object Being Generated**: {{ $json.object_name }}\n**Retry Attempt**: {{ $json.retry_count }} of 3\n\n### Error Information:\n- **Error Category**: {{ $json.error_category }}\n- **Error Type**: {{ $json.error_type }}\n- **Error Message**: {{ $json.error_message }}\n- **Error Line**: {{ $json.error_line || 'Unknown' }}\n\n\n### Original Code That Failed:\n```python\n{{ $json.original_code }}\n```\n\n## YOUR TASK:\n1. Analyze the error and the problematic code section\n2. Apply the fix suggestions\n3. Return ONLY the corrected, complete Python code\n4. Do NOT include any explanations or markdown",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "# Blender Python Error Fixer Agent\n\nYou are an expert at fixing Blender Python code that has failed execution. You receive error details from Blender's execution environment and must fix the code.\n\n## Your Process:\n1. Read the error category, type, and message carefully\n2. Look at the problematic code section (with line numbers)\n3. Apply the fix suggestions provided\n4. Return ONLY the corrected complete Python code\n\n## Common Fixes by Error Category:\n\n### SYNTAX_ERROR\n- Fix indentation, brackets, colons\n- Check string quotes and escaping\n\n### ATTRIBUTE_ERROR\n- Use correct Blender 4.4 API names\n- Check object existence before accessing attributes\n- Use .get() for optional attributes\n\n### NAME_ERROR\n- Add missing imports\n- Define variables before use\n- Check spelling of function/variable names\n\n### TYPE_ERROR\n- Check argument types match function requirements\n- Convert types where needed (int, float, list)\n\n### CONTEXT_ERROR\n- Ensure correct mode (OBJECT vs EDIT)\n- Check context.active_object exists\n- Use proper override context for operators\n\n### RUNTIME_ERROR\n- Add error handling around risky operations\n- Check object/mesh validity before operations\n\n## OUTPUT:\n- Return ONLY executable Python code\n- No markdown code blocks\n- No explanations\n- Start with 'import bpy'"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -400,
+        544
+      ],
+      "id": "9164eef6-e494-4777-903a-6ea809fe6d40",
+      "name": "Error Fixer Agent1"
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        752
+      ],
+      "id": "27888637-0e80-4ec0-ac19-96ef9820213d",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "7Ei3PY8PNtRLFQsj",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -2368,
+        1456
+      ],
+      "id": "ffd915d5-3c82-4db2-855f-e85c201c30ec",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "7Ei3PY8PNtRLFQsj",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -3376,
+        416
+      ],
+      "id": "1d2216b9-5488-46a0-81b5-72fb60dd636f",
+      "name": "OpenRouter Chat Model2",
+      "credentials": {
+        "openRouterApi": {
+          "id": "7Ei3PY8PNtRLFQsj",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-5.2",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1776,
+        1536
+      ],
+      "id": "9e7e4a39-f88d-4d3f-9b8d-c5e67ac7094f",
+      "name": "OpenRouter Chat Model3",
+      "credentials": {
+        "openRouterApi": {
+          "id": "7Ei3PY8PNtRLFQsj",
+          "name": "OpenRouter account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Start": {
+      "main": [
+        [
+          {
+            "node": "Update or Create?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update or Create?": {
+      "main": [
+        [
+          {
+            "node": "Scene Update Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Layout Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layout Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Layout Auto-fix",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layout Auto-fix": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Layout Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Objects Generated?": {
+      "main": [
+        [
+          {
+            "node": "Error Fallback Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Objects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Objects": {
+      "main": [
+        [
+          {
+            "node": "Loop Objects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Objects": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Code Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Code": {
+      "main": [
+        [
+          {
+            "node": "Syntex checker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Syntax Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Syntex checker",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry Limit?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Error Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Error Data": {
+      "main": [
+        [
+          {
+            "node": "Error Fixer Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fixer Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Error Fixer Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry Send to Blender": {
+      "main": [
+        [
+          {
+            "node": "Retry Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry Success?": {
+      "main": [
+        [
+          {
+            "node": "Mark Retry Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Retry Limit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Success": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Retry Success": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Failed": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Loop Objects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scene Update Agent": {
+      "main": [
+        [
+          {
+            "node": "Update Send to Blender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Update Auto-fix",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Auto-fix": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Scene Update Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Auto-fix LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Update Auto-fix",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Fallback Code": {
+      "main": [
+        [
+          {
+            "node": "Fallback Send to Blender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Blender": {
+      "main": [
+        [
+          {
+            "node": "Code Executed OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fix LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Layout Auto-fix",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Executed OK?": {
+      "main": [
+        [
+          {
+            "node": "Mark Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Retry Limit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Layout Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Layout Generator": {
+      "main": [
+        [
+          {
+            "node": "Objects Generated?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Generator": {
+      "main": [
+        [
+          {
+            "node": "Prepare Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Syntex checker": {
+      "main": [
+        [
+          {
+            "node": "Send to Blender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Fixer Agent1": {
+      "main": [
+        [
+          {
+            "node": "Retry Send to Blender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Error Fixer Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Code Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Scene Update Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Syntex checker",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "c3a57ebd-d040-49ed-a1f9-b0f550ed69c1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aa1d9c27f0eb332940ae895e23e63f715ab6a50715fc39a32f28a3bd245da728"
+  },
+  "id": "Hg7VMc2qW5Bf4K1Y",
+  "tags": []
+}
