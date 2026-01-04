@@ -92,7 +92,7 @@
       "name": "Auto-fix LLM",
       "credentials": {
         "openRouterApi": {
-          "id": "7Ei3PY8PNtRLFQsj",
+          "id": "7Ei3PY8PdfRLFQsj",
           "name": "OpenRouter account"
         }
       }
@@ -637,7 +637,7 @@
       "name": "Update Auto-fix LLM",
       "credentials": {
         "openRouterApi": {
-          "id": "7Ei3PY8PNtRLFQsj",
+          "id": "7Ei3PY8PNtddFQsj",
           "name": "OpenRouter account"
         }
       }
@@ -761,7 +761,7 @@
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "6qXoQ9RmYBsoBudQ",
+          "id": "6qXoQ9RdfBsoBudQ",
           "name": "OpenAi account"
         }
       }
@@ -853,7 +853,7 @@
       "name": "OpenRouter Chat Model",
       "credentials": {
         "openRouterApi": {
-          "id": "7Ei3PY8PNtRLFQsj",
+          "id": "7Ei3PdfdPNtRLFQsj",
           "name": "OpenRouter account"
         }
       }
@@ -873,7 +873,7 @@
       "name": "OpenRouter Chat Model1",
       "credentials": {
         "openRouterApi": {
-          "id": "7Ei3PY8PNtRLFQsj",
+          "id": "7Ei3PY8PNtdfdQsj",
           "name": "OpenRouter account"
         }
       }
@@ -893,7 +893,7 @@
       "name": "OpenRouter Chat Model2",
       "credentials": {
         "openRouterApi": {
-          "id": "7Ei3PY8PNtRLFQsj",
+          "id": "7Ei3PY8PNdfdffQsj",
           "name": "OpenRouter account"
         }
       }
@@ -913,7 +913,7 @@
       "name": "OpenRouter Chat Model3",
       "credentials": {
         "openRouterApi": {
-          "id": "7Ei3PY8PNtRLFQsj",
+          "id": "dsffkdsfnkdfsdf",
           "name": "OpenRouter account"
         }
       }
