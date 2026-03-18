@@ -55,29 +55,6 @@ Before you begin, ensure you have:
 
 ### 1. Setting up n8n
 
-#### Option A: Docker (Recommended)
-
-```bash
-docker run -it --rm \
-  --name n8n \
-  -p 5678:5678 \
-  -v n8n_data:/home/node/.n8n \
-  n8nio/n8n
-```
-
-#### Option B: npm Installation
-
-```bash
-npm install n8n -g
-n8n start
-```
-
-#### Option C: Desktop App
-
-Download the n8n desktop app from [n8n.io/get-started](https://n8n.io/get-started/)
-
-After installation, access n8n at: **http://localhost:5678**
-
 ### 2. Importing the DreamMesh Workflow
 
 1. Open n8n in your browser (`http://localhost:5678`)
